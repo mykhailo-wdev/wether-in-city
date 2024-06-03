@@ -7,7 +7,8 @@
         type="text" 
         class="weather__search__input" 
         placeholder="Введіть назву міста" 
-        v-model="city" 
+        :value="city"
+        @input="updateCity($event.target.value)"
         @keyup.enter="getWeather"
       >
       <button v-if="city !== ''" class="btn" @click="getWeather">Дізнатись погоду</button>
@@ -27,53 +28,31 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { mapState, mapActions } from 'vuex';
+
 export default {
   name: 'App',
-  data () {
-    return {
-      city: '',
-      error: '',
-      weatherIconUrl: '',
-      description: '',
-      temp: null,
-      feelLike: null,
-      pressure: null,
-      humidity: null,
-      wind: null,
-      degreeSymbol: '&#8451;'
-    }
+  computed: {
+    ...mapState([
+      'city',
+      'error',
+      'weatherIconUrl',
+      'description',
+      'temp',
+      'feelLike',
+      'pressure',
+      'humidity',
+      'wind',
+      'degreeSymbol'
+    ])
   },
   methods: {
-    async getWeather () {
-      if (this.city.trim().length < 2) {
-        this.error = 'Введене значення має бути більше 2 символів'
-        return false
-      }
-      this.error = ''
-      try {
-        const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${this.city}&units=metric&lang=ua&appid=a8659d580c28d90db90d9619e729c8cd`);
-        const weatherData = response.data.weather[0];
-        this.weatherIconUrl = `https://openweathermap.org/img/wn/${weatherData.icon}.png`;
-        this.temp = response.data.main.temp;
-        this.feelLike = response.data.main.feels_like;
-        this.description = weatherData.description;
-        this.pressure = response.data.main.pressure;
-        this.humidity = response.data.main.humidity;
-        this.wind = response.data.wind.speed;
-      } catch (err) {
-        this.error = 'Даного міста не існує, або Ви зробили помилку у введені даних, будь ласка, спробуйте ще раз';
-      }
-    },
+    ...mapActions(['getWeather']),
     clearWeatherData() {
-      this.weatherIconUrl = '';
-      this.description = '';
-      this.temp = null;
-      this.feelLike = null;
-      this.pressure = null;
-      this.humidity = null;
-      this.wind = null;
-      this.error = '';
+      this.$store.commit('clearWeatherData');
+    },
+    updateCity(value) {
+      this.$store.commit('setCity', value);
     }
   },
   watch: {
@@ -85,6 +64,7 @@ export default {
   }
 }
 </script>
+
 
 <style lang="scss">
 #app {
